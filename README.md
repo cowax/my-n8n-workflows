@@ -1,8 +1,5 @@
 # my-n8n-workflows
 A collection of production-ready n8n workflows and automation templates featured in my Medium articles. This repository provides modular, easy-to-use JSON files for various API integrations, business automations, and productivity tools. Designed to help you scale your n8n setup—simply download the files and import them into your instance.
-# n8n Automation Workflows
-
-Welcome to my collection of n8n workflows! This repository contains the source files for automations discussed in my Medium articles.
 
 ## 📖 Related Articles
 * **[Backup your n8n workflows to GitHub automatically](YOUR_MEDIUM_LINK_HERE)** - Detailed guide on how to use the backup workflow.
