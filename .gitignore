@@ -1,0 +1,12 @@
+# n8n local files
+.n8n/
+binaryData/
+
+# Credentials & Environment
+.env
+auth.json
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
