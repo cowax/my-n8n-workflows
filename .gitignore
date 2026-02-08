@@ -1,12 +1,15 @@
-# n8n local files
+# n8n local files (if you ever run n8n locally in this folder)
 .n8n/
 binaryData/
 
-# Credentials & Environment
+# Credentials & Environment (Crucial to prevent leaks)
 .env
 auth.json
+credentials.json
 *.log
 
-# OS files
+# System files
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
