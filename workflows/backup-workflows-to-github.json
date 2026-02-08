@@ -1,1 +1,600 @@
-
+{
+  "name": "Backup Workflows to GitHub",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "init"
+        ]
+      },
+      "type": "n8n-nodes-base.n8nTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -1552
+      ],
+      "id": "d00974b0-9544-424d-85c0-e149a313cc09",
+      "name": "n8n Trigger (startup/restart)"
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -1456
+      ],
+      "id": "ef21706c-306d-45f1-88f9-b6eadacf34a0",
+      "name": "Loop Over Items",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:5678/api/v1/workflows/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1120,
+        -1456
+      ],
+      "id": "a0416990-15af-4f41-b0d3-e19b1c454856",
+      "name": "Fetch individual workflow details",
+      "alwaysOutputData": false,
+      "credentials": {
+        "n8nApi": {
+          "id": "8cbSJTtz55o9qWrq",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5678/api/v1/workflows",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        -1456
+      ],
+      "id": "21d46708-ec2a-4478-80af-767bc1363251",
+      "name": "fetches a list of all your workflows",
+      "credentials": {
+        "n8nApi": {
+          "id": "8cbSJTtz55o9qWrq",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/<your_github_account>/<your_repository>/contents/workflows/{{ $json.filename }}?ref=main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "sha",
+              "value": "={{ $json.sha || undefined }}"
+            },
+            {
+              "name": "committer.name",
+              "value": "n8n Backup Bot"
+            },
+            {
+              "name": "committer.email",
+              "value": "backup@n8n.local"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2464,
+        -1376
+      ],
+      "id": "9d62c57a-5226-4be6-8663-163aa245863a",
+      "name": "Commit to GitHub",
+      "credentials": {
+        "githubApi": {
+          "id": "GLNh1RsMlXHcMwuN",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/<your_github_account>/<your_repository>/contents/workflows/{{ encodeURIComponent($json.filename) }}?ref=main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1792,
+        -1520
+      ],
+      "id": "0b23e837-fb56-43ca-9bcb-4e323ac6ecbf",
+      "name": "GET existing File",
+      "alwaysOutputData": false,
+      "credentials": {
+        "githubApi": {
+          "id": "GLNh1RsMlXHcMwuN",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1e8594db-4124-4196-9d6d-6da3b6af7747",
+              "leftValue": "={{ $json.shouldUpdate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2240,
+        -1456
+      ],
+      "id": "ecf49d95-2a83-4a0d-ac14-c506e6f740ff",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -1456
+      ],
+      "id": "6c917b43-1034-4f2d-97f0-6b3a084b870d",
+      "name": "Split data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the workflow data from the HTTP request\nconst workflowData = $json; \n\n// We create a clean object without the API metadata that always changes\nconst cleanWorkflow = {\n  name: workflowData.name,\n  nodes: workflowData.nodes,\n  connections: workflowData.connections,\n  settings: workflowData.settings,\n  staticData: workflowData.staticData,\n  pinData: workflowData.pinData\n};\n\nconst content = Buffer.from(JSON.stringify(cleanWorkflow)).toString('base64');\n\nreturn {\n  filename: `${workflowData.name.replace(/\\s+/g, '_')}.json`,\n  content: content,\n  message: `Backup workflow: ${workflowData.name}`,\n  // Also pass the clean object for comparison later\n  cleanWorkflow: cleanWorkflow \n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -1520
+      ],
+      "id": "718bb0e7-fa86-448e-bb74-1e44e6366fba",
+      "name": "Convert to JSON & Base64 encode it"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the GitHub file data (current input from GET existing File)\nconst githubItem = $json;\n\n// Get the prepared workflow data from the previous node\nconst prepared = $('Convert to JSON & Base64 encode it').first().json;\n\nlet sha = githubItem.sha || null;\nlet shouldUpdate = true;\nlet debug = \"\";\nlet remoteText = \"\";\nlet localText = \"\";\n\nif (sha && githubItem.content) {\n  // Decode GitHub content and remove all whitespace\n  remoteText = Buffer.from(githubItem.content, 'base64')\n    .toString('utf8')\n    .replace(/\\s/g, '');\n  \n  // Compare with local cleanWorkflow (also without whitespace)\n  localText = JSON.stringify(prepared.cleanWorkflow).replace(/\\s/g, '');\n\n  if (remoteText === localText) {\n    shouldUpdate = false;\n    debug = \"Content is identical\";\n  } else {\n    shouldUpdate = true;\n    debug = \"Content changed\";\n  }\n} else {\n  debug = \"New file (no SHA found)\";\n}\n\nreturn {\n  shouldUpdate,\n  sha,\n  filename: prepared.filename,\n  content: prepared.content,\n  message: prepared.message,\n  debug,\n  // Add these for debugging\n  remoteLength: remoteText.length,\n  localLength: localText.length,\n  remotePreview: remoteText.substring(0, 200),\n  localPreview: localText.substring(0, 200)\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        -1520
+      ],
+      "id": "c68a9c84-c6b7-4f3a-966b-42b6d4100bea",
+      "name": "compare code node",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Retrieve the basic data from the start of the workflow\nconst allFetchedNodes = $(\"fetches a list of all your workflows\").all();\nconst totalFetched = allFetchedNodes.length > 0 ? (allFetchedNodes[0].json.data ? allFetchedNodes[0].json.data.length : allFetchedNodes.length) : 0;\n\n// 2. Retrieve the items from the filter-node (note the exact name with brackets!)\nlet totalProcessed = 0;\ntry {\n  // I added the closing bracket to the name here:\n  const filterOutput = $(\"Exclude Sensitive Workflows (tag=no-backup or workflow name include INTERNAL)\").all();\n  \n  // Check if the data is in an array (before the split) or loose items are (after the split)\n  if (filterOutput.length > 0 && filterOutput[0].json.data) {\n    totalProcessed = filterOutput[0].json.data.length;\n  } else {\n    totalProcessed = filterOutput.length;\n  }\n} catch (e) {\n  totalProcessed = 0;\n}\n\n// 3. Analyseer de resultaten die de node zelf binnenkrijgt ($input.all())\nconst results = $input.all();\n\nconst updatedCount = results.filter(item => \n  item.json.commit || (item.json.shouldUpdate === true)\n).length;\n\nconst skippedCount = results.filter(item => \n  item.json.shouldUpdate === false\n).length;\n\n// 4. Calculate excluded\nconst excludedCount = totalFetched - totalProcessed;\n\nreturn {\n  summary: totalProcessed === 0 ? \"⚠️ Backup Skipped\" : \"✅ Backup Complete\",\n  details: `Fetched: ${totalFetched} | Processed: ${totalProcessed} | Updated: ${updatedCount} | Skipped: ${skippedCount} | Excluded: ${excludedCount}`,\n  stats: {\n    total_fetched: totalFetched,\n    processed: totalProcessed,\n    updated_github: updatedCount,\n    skipped_no_changes: skippedCount,\n    excluded_sensitive: excludedCount\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -1712
+      ],
+      "id": "d4c9a58c-8d94-4930-b591-b4d108d83dd3",
+      "name": "message of backup"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -1712
+      ],
+      "id": "dcc4fad5-51aa-456f-9a67-010523026255",
+      "name": "END"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        -1552
+      ],
+      "id": "2e8dd494-5913-42b3-a90f-7d732895f81d",
+      "name": "Wait (so n8n is ready and runnning)",
+      "webhookId": "f8acae05-8a43-4a86-8529-dc2dd16edd04"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        -1360
+      ],
+      "id": "63ac21c7-c704-4c90-bde2-300fbe6e8b3e",
+      "name": "Schedule Trigger (every hour)"
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Automated Backup to GitHub\n\n\n\n**What this does:**\n- Backs up all n8n workflows to GitHub\n- Only commits when changes detected\n- Excludes sensitive workflows (tag: no-backup)\n- Sends error alerts via Pushbullet\n\n\n**Setup:**\n1. Create private GitHub repo\n2. Get GitHub Personal Access Token (scope: `repo`)\n3. Get n8n API key (Settings → API)\n4. Replace YOUR_GITHUB_USERNAME/YOUR_REPO_NAME in HTTP nodes\n5. Configure credentials\n\n**Full Tutorial:** Follow me on Medium [@cowax](https://medium.com/@cowax) for the complete guide (publishing this week!)",
+        "height": 724,
+        "width": 440
+      },
+      "id": "b1c0e94f-5a7e-4707-bc2e-20bf7316c980",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -2064
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Triggers\n\n**On Startup:** Backs up when n8n restarts  \n**Schedule:** Runs every hour\n\nWait node ensures API is ready. Especially when running n8n locally",
+        "height": 192,
+        "width": 360,
+        "color": 4
+      },
+      "id": "39217aea-39fa-429c-be86-64961268abdb",
+      "name": "Sticky Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -1264
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📥 Fetch Data\n\nGets list of workflow IDs, then fetches full details for each.",
+        "height": 152,
+        "width": 360,
+        "color": 5
+      },
+      "id": "c2eec578-82f8-4439-92fa-fdf2a78e7370",
+      "name": "Sticky Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -1264
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔄 Process Loop\n\nLoops through each workflow:\n1. Clean data (remove metadata)\n2. Base64 encode\n3. Check if exists on GitHub\n4. Compare content",
+        "height": 188,
+        "width": 420,
+        "color": 6
+      },
+      "id": "e0ba0cd7-7c3f-4371-95ea-6ea79ff552c7",
+      "name": "Sticky Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Summary\n\nShows: processed, updated, skipped, excluded workflows",
+        "height": 132,
+        "width": 468,
+        "color": 2
+      },
+      "id": "f02a669e-b53b-4a0c-a284-bf9638e3d1aa",
+      "name": "Sticky Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        -1888
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ✅ Smart Commit\n\nOnly commits if content changed.  \nPrevents duplicate commits!",
+        "height": 136,
+        "width": 380,
+        "color": 3
+      },
+      "id": "1e1b061b-79d0-4fa1-b999-cc4e48ff4750",
+      "name": "Sticky Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        -1536
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the list of workflows from the data property\nconst workflows = $json.data; \n\nif (!workflows || !Array.isArray(workflows)) {\n  return $json;\n}\n\n// Filter the list\nconst filtered = workflows.filter(workflow => {\n  const name = workflow.name || '';\n  const isInternal = name.includes('INTERNAL');\n  const hasNoBackupTag = workflow.tags && \n                        Array.isArray(workflow.tags) && \n                        workflow.tags.some(tag => tag.name === 'no-backup');\n  \n  // De 'isSelf' check is hier volledig verwijderd.\n  return !(isInternal || hasNoBackupTag);\n});\n\n// Stuur het object terug met de gefilterde lijst in 'data'\nreturn {\n  data: filtered\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -1456
+      ],
+      "id": "7665e89f-472d-442a-8d78-df5ec4424fdf",
+      "name": "Exclude Sensitive Workflows (tag=no-backup or workflow name include INTERNAL)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "n8n Trigger (startup/restart)": {
+      "main": [
+        [
+          {
+            "node": "Wait (so n8n is ready and runnning)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "message of backup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to JSON & Base64 encode it",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch individual workflow details": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetches a list of all your workflows": {
+      "main": [
+        [
+          {
+            "node": "Exclude Sensitive Workflows (tag=no-backup or workflow name include INTERNAL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit to GitHub": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET existing File": {
+      "main": [
+        [
+          {
+            "node": "compare code node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Commit to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split data": {
+      "main": [
+        [
+          {
+            "node": "Fetch individual workflow details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to JSON & Base64 encode it": {
+      "main": [
+        [
+          {
+            "node": "GET existing File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "compare code node": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "message of backup": {
+      "main": [
+        [
+          {
+            "node": "END",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "END": {
+      "main": [
+        []
+      ]
+    },
+    "Wait (so n8n is ready and runnning)": {
+      "main": [
+        [
+          {
+            "node": "fetches a list of all your workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger (every hour)": {
+      "main": [
+        [
+          {
+            "node": "fetches a list of all your workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exclude Sensitive Workflows (tag=no-backup or workflow name include INTERNAL)": {
+      "main": [
+        [
+          {
+            "node": "Split data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Brussels",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2cb4dd26-ab32-400b-9e84-fb31d1139936",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "1T_SvGjlRsENtIup8ktDX",
+  "tags": [
+    {
+      "updatedAt": "2026-02-01T07:52:57.710Z",
+      "createdAt": "2026-02-01T07:52:57.710Z",
+      "id": "YrAIPo5cV2sXytwn",
+      "name": "housekeeping"
+    }
+  ]
+}
